@@ -1,0 +1,57 @@
+# Test Environment Configuration
+spring:
+  # Database Configuration for Testing
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    
+  # JPA Configuration for Testing
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        
+  # Disable SQL initialization for tests (avoid data.sql conflicts)
+  sql:
+    init:
+      mode: never
+        
+  # Cache Configuration for Testing
+  cache:
+    type: simple
+    
+  # Security Configuration for Testing
+  security:
+    jwt:
+      secret: testSecretKey
+      expiration: 3600000 # 1 hour
+      refresh-expiration: 7200000 # 2 hours
+      
+# Logging Configuration for Testing
+logging:
+  level:
+    com.bookreview: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.web: WARN
+    
+# OpenAI Configuration for Testing
+openai:
+  api:
+    key: test-key
+    model: gpt-3.5-turbo
+    timeout: 5000 # 5 seconds
+    
+# Application Configuration for Testing
+app:
+  recommendation:
+    cache-ttl: 60 # 1 minute for testing
+    strategies:
+      ai-powered:
+        enabled: false # Disable AI for tests
+        fallback-enabled: true

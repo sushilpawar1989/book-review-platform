@@ -1,0 +1,70 @@
+# Development Environment Configuration
+spring:
+  # Database Configuration for Development
+  datasource:
+    url: jdbc:h2:mem:devdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+        
+  # JPA Configuration for Development
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+        generate_statistics: true
+        
+  # Enable SQL initialization to load sample data after schema creation
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+        
+  # Cache Configuration
+  cache:
+    type: simple
+    
+  # Security Configuration for Development
+  security:
+    jwt:
+      secret: ${JWT_SECRET:YjM2N2Q4ZWZhMTJjNGU5OGI3ZjNkMmE4YzVlNjRiOWQ5ZmE3YjNlOGM0ZDZhOWIyZjhlNzMxNGM5ZGI2YWY4ZGFiMzY3ZDhlZmExMmM0ZTk4Yjc=}
+      expiration: 86400000 # 24 hours
+      refresh-expiration: 604800000 # 7 days
+    
+# Server Configuration for Development
+server:
+  port: 8080
+  
+# Logging Configuration for Development
+logging:
+  level:
+    com.bookreview: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    
+# OpenAI Configuration for Development
+openai:
+  api:
+    key: ${OPENAI_API_KEY:}
+    timeout: 10000 # 10 seconds for faster development
+    
+# Application Configuration for Development
+app:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000
+  
+  recommendation:
+    cache-ttl: 300 # 5 minutes for development

@@ -1,0 +1,84 @@
+# Production Environment Configuration
+spring:
+  # Database Configuration for Production
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bookreview}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:bookreview}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 600000
+      
+  # JPA Configuration for Production
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        
+  # Cache Configuration for Production
+  cache:
+    type: redis
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      
+  # Security Configuration for Production
+  security:
+    jwt:
+      secret: ${JWT_SECRET:}
+      expiration: 86400000 # 24 hours
+      refresh-expiration: 604800000 # 7 days
+      
+# Server Configuration for Production
+server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+  forward-headers-strategy: native
+  
+# Management Configuration for Production
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never
+      
+# Logging Configuration for Production
+logging:
+  level:
+    com.bookreview: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.web: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/book-review-platform.log
+    max-size: 100MB
+    max-history: 30
+    
+# OpenAI Configuration for Production
+openai:
+  api:
+    key: ${OPENAI_API_KEY:}
+    model: gpt-4
+    timeout: 30000 # 30 seconds
+    
+# Application Configuration for Production
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:https://bookreview.example.com}
+    
+  recommendation:
+    cache-ttl: 3600 # 1 hour

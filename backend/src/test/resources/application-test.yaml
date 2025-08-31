@@ -1,0 +1,41 @@
+# Test-specific application configuration
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    
+  security:
+    jwt:
+      secret: testSecretKeyForTesting
+      expiration: 3600000 # 1 hour for testing
+      refresh-expiration: 7200000 # 2 hours for testing
+
+# Logging for tests
+logging:
+  level:
+    com.bookreview: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    
+# OpenAI configuration for tests (disabled)
+openai:
+  api:
+    key: test-key
+    model: gpt-3.5-turbo
+    timeout: 5000
+    
+# Application configuration for tests
+app:
+  recommendation:
+    cache-ttl: 60 # 1 minute for testing
+    strategies:
+      ai-powered:
+        enabled: false # Disable AI for tests
+        fallback-enabled: true
