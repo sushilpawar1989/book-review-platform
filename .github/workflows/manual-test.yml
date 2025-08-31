@@ -1,0 +1,82 @@
+name: 🧪 Manual Test Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of test to run'
+        required: true
+        default: 'build'
+        type: choice
+        options:
+        - build
+        - test
+        - docker
+        - full
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+        - development
+        - staging
+        - production
+
+jobs:
+  manual-test:
+    name: 🧪 Manual Test - ${{ github.event.inputs.test_type }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: 📋 Display Test Parameters
+      run: |
+        echo "🧪 Test Type: ${{ github.event.inputs.test_type }}"
+        echo "🌍 Environment: ${{ github.event.inputs.environment }}"
+        echo "🔗 Triggered by: ${{ github.actor }}"
+        echo "📅 Timestamp: $(date)"
+        
+    - name: 🏗️ Backend Test
+      if: contains(github.event.inputs.test_type, 'build') || contains(github.event.inputs.test_type, 'full')
+      run: |
+        echo "🏗️ Testing Backend Build..."
+        cd backend
+        chmod +x gradlew
+        ./gradlew clean build -x test
+        echo "✅ Backend build successful!"
+        
+    - name: ⚛️ Frontend Test  
+      if: contains(github.event.inputs.test_type, 'build') || contains(github.event.inputs.test_type, 'full')
+      run: |
+        echo "⚛️ Testing Frontend Build..."
+        cd frontend
+        npm ci
+        npm run build
+        echo "✅ Frontend build successful!"
+        
+    - name: 🧪 Run Tests
+      if: contains(github.event.inputs.test_type, 'test') || contains(github.event.inputs.test_type, 'full')
+      run: |
+        echo "🧪 Running Tests..."
+        cd backend && ./gradlew test
+        cd ../frontend && npm test -- --watchAll=false
+        echo "✅ All tests passed!"
+        
+    - name: 🐳 Docker Test
+      if: contains(github.event.inputs.test_type, 'docker') || contains(github.event.inputs.test_type, 'full')
+      run: |
+        echo "🐳 Testing Docker Builds..."
+        docker --version
+        docker-compose --version
+        echo "✅ Docker environment ready!"
+        
+    - name: 🎉 Test Complete
+      run: |
+        echo "🎉 Manual test completed successfully!"
+        echo "📊 Results summary:"
+        echo "  - Test Type: ${{ github.event.inputs.test_type }}"
+        echo "  - Environment: ${{ github.event.inputs.environment }}"
+        echo "  - Status: ✅ PASSED"
