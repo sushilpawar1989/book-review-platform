@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: book-review-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:bookreview
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-here}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - backend_data:/app/data
+    networks:
+      - book-review-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: book-review-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080/api/v1
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - book-review-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # Database (Optional - PostgreSQL for production)
+  database:
+    image: postgres:15-alpine
+    container_name: book-review-db
+    environment:
+      - POSTGRES_DB=bookreview
+      - POSTGRES_USER=bookuser
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-bookpassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - book-review-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookuser -d bookreview"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Redis (Optional - for caching)
+  redis:
+    image: redis:7-alpine
+    container_name: book-review-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - book-review-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  backend_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  book-review-network:
+    driver: bridge
+    name: book-review-network
