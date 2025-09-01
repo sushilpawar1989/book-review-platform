@@ -7,38 +7,7 @@ resource "aws_ecr_repository" "backend" {
     scan_on_push = true
   }
 
-  lifecycle_policy {
-    policy = jsonencode({
-      rules = [
-        {
-          rulePriority = 1
-          description  = "Keep last 10 images"
-          selection = {
-            tagStatus     = "tagged"
-            tagPrefixList = ["v"]
-            countType     = "imageCountMoreThan"
-            countNumber   = 10
-          }
-          action = {
-            type = "expire"
-          }
-        },
-        {
-          rulePriority = 2
-          description  = "Delete untagged images"
-          selection = {
-            tagStatus   = "untagged"
-            countType   = "sinceImagePushed"
-            countUnit   = "days"
-            countNumber = 1
-          }
-          action = {
-            type = "expire"
-          }
-        }
-      ]
-    })
-  }
+  # Note: Lifecycle policy removed - ECR lifecycle policies are managed separately
 
   tags = {
     Name        = "${var.project_name}-backend-ecr"
@@ -54,38 +23,7 @@ resource "aws_ecr_repository" "frontend" {
     scan_on_push = true
   }
 
-  lifecycle_policy {
-    policy = jsonencode({
-      rules = [
-        {
-          rulePriority = 1
-          description  = "Keep last 10 images"
-          selection = {
-            tagStatus     = "tagged"
-            tagPrefixList = ["v"]
-            countType     = "imageCountMoreThan"
-            countNumber   = 10
-          }
-          action = {
-            type = "expire"
-          }
-        },
-        {
-          rulePriority = 2
-          description  = "Delete untagged images"
-          selection = {
-            tagStatus   = "untagged"
-            countType   = "sinceImagePushed"
-            countUnit   = "days"
-            countNumber = 1
-          }
-          action = {
-            type = "expire"
-          }
-        }
-      ]
-    })
-  }
+  # Note: Lifecycle policy removed - ECR lifecycle policies are managed separately
 
   tags = {
     Name        = "${var.project_name}-frontend-ecr"
