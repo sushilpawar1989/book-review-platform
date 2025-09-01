@@ -29,7 +29,7 @@ export const useCurrentUserProfile = () => {
 export const useUserStats = (userId: string) => {
   return useQuery({
     queryKey: ['user', 'stats', userId],
-    queryFn: () => userApi.getUserStats(userId),
+    queryFn: () => userApi.getUserStats(),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache
     refetchOnMount: true,
