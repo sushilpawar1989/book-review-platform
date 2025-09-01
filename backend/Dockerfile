@@ -23,6 +23,12 @@ RUN ./gradlew build -x test --no-daemon
 # Runtime stage
 FROM eclipse-temurin:17-jre
 
+# Accept build arguments
+ARG JWT_SECRET
+ARG JWT_EXPIRATION
+ARG JWT_REFRESH_EXPIRATION
+ARG OPENAI_API_KEY
+
 # Create app user
 RUN addgroup --system spring && adduser --system spring --ingroup spring
 
@@ -34,6 +40,12 @@ COPY --from=builder /app/build/libs/*.jar app.jar
 
 # Change ownership to spring user
 RUN chown spring:spring app.jar
+
+# Set environment variables
+ENV JWT_SECRET=${JWT_SECRET}
+ENV JWT_EXPIRATION=${JWT_EXPIRATION}
+ENV JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 
 # Switch to spring user
 USER spring

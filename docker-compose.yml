@@ -12,8 +12,14 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:h2:mem:bookreview
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-here}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - SPRING_SECURITY_JWT_SECRET=${JWT_SECRET:-your-super-secure-jwt-secret-key-that-is-long-enough-for-256-bits}
+      - SPRING_SECURITY_JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - SPRING_SECURITY_JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION:-604800000}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      - SPRING_SQL_INIT_MODE=never
+      - SPRING_CACHE_TYPE=none
+      - SPRING_CACHE_CACHE_NAMES=""
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - backend_data:/app/data
     networks:

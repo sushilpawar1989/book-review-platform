@@ -232,6 +232,15 @@ jobs:
         echo "Region: ${{ secrets.AWS_REGION }}"
         echo "================================"
         
+    - name: 🔐 Set Environment Variables
+      run: |
+        echo "Setting environment variables for Docker build..."
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
+        echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> $GITHUB_ENV
+        echo "JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}" >> $GITHUB_ENV
+        echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+        echo "Environment variables set successfully!"
+        
     - name: 🔐 Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -254,6 +263,11 @@ jobs:
           ${{ steps.login-ecr.outputs.registry }}/book-review-backend:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          JWT_SECRET=${{ env.JWT_SECRET }}
+          JWT_EXPIRATION=${{ env.JWT_EXPIRATION }}
+          JWT_REFRESH_EXPIRATION=${{ env.JWT_REFRESH_EXPIRATION }}
+          OPENAI_API_KEY=${{ env.OPENAI_API_KEY }}
         
     - name: 🏗️ Build and Push Frontend Docker Image
       uses: docker/build-push-action@v5

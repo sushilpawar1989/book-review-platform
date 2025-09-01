@@ -276,6 +276,54 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "SPRING_PROFILES_ACTIVE"
           value = "prod"
+        },
+        {
+          name  = "SPRING_DATASOURCE_URL"
+          value = "jdbc:h2:mem:testdb"
+        },
+        {
+          name  = "SPRING_DATASOURCE_DRIVER_CLASS_NAME"
+          value = "org.h2.Driver"
+        },
+        {
+          name  = "SPRING_DATASOURCE_USERNAME"
+          value = "sa"
+        },
+        {
+          name  = "SPRING_DATASOURCE_PASSWORD"
+          value = ""
+        },
+        {
+          name  = "SPRING_H2_CONSOLE_ENABLED"
+          value = "true"
+        },
+        {
+          name  = "SPRING_JPA_DATABASE_PLATFORM"
+          value = "org.hibernate.dialect.H2Dialect"
+        },
+        {
+          name  = "SPRING_JPA_HIBERNATE_DDL_AUTO"
+          value = "create-drop"
+        },
+        {
+          name  = "SPRING_CACHE_TYPE"
+          value = "none"
+        },
+        {
+          name  = "SPRING_CACHE_CACHE_NAMES"
+          value = ""
+        },
+        {
+          name  = "SPRING_SQL_INIT_MODE"
+          value = "always"
+        },
+        {
+          name  = "SPRING_SQL_INIT_ORDER"
+          value = "1"
+        },
+        {
+          name  = "SPRING_SQL_INIT_MODE"
+          value = "never"
         }
       ]
       

@@ -1,5 +1,5 @@
--- Sample data for Book Review Platform
--- This file will be loaded by Spring Boot for H2 database initialization
+-- Flyway migration V2: Insert sample data
+-- This script inserts sample books, users, and related data
 
 -- Insert sample books
 INSERT INTO books (title, author, description, cover_image_url, published_year, average_rating, total_reviews, created_at, updated_at) VALUES 
@@ -101,4 +101,4 @@ INSERT INTO user_favorite_books (user_id, book_id) VALUES
 (1, 5),
 (2, 1),
 (2, 3),
-(2, 6);
+(2, 9);
