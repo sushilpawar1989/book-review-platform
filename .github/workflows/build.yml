@@ -30,6 +30,12 @@ jobs:
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
         restore-keys: ${{ runner.os }}-gradle
         
+    - name: 🔍 Debug - Check gradlew exists
+      run: |
+        echo "Checking if gradlew exists..."
+        ls -la backend/
+        ls -la backend/gradlew || echo "gradlew not found"
+        
     - name: 🔧 Grant execute permission for gradlew
       run: chmod +x ./backend/gradlew
       

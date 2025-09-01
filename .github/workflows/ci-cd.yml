@@ -23,7 +23,10 @@ jobs:
     steps:
     - name: 📥 Checkout Code
       uses: actions/checkout@v4
-      
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+        
     - name: ☕ Set up JDK ${{ env.JAVA_VERSION }}
       uses: actions/setup-java@v4
       with:
@@ -40,6 +43,18 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
           
+    - name: 🔍 Debug - Check gradlew exists
+      run: |
+        echo "Checking if gradlew exists..."
+        echo "Current directory: $(pwd)"
+        echo "Git status:"
+        git status --porcelain
+        echo "Backend directory contents:"
+        ls -la backend/
+        echo "Gradle wrapper files:"
+        ls -la backend/gradle/wrapper/ || echo "gradle/wrapper not found"
+        ls -la backend/gradlew || echo "gradlew not found"
+        
     - name: 🔧 Make Gradlew Executable
       run: chmod +x ./backend/gradlew
       
