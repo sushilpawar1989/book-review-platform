@@ -33,11 +33,15 @@ jobs:
     - name: 🔍 Debug - Check gradlew exists
       run: |
         echo "Checking if gradlew exists..."
-        ls -la backend/
-        ls -la backend/gradlew || echo "gradlew not found"
+        echo "Current directory: $(pwd)"
+        echo "Current directory contents:"
+        ls -la
+        echo "Gradle wrapper files:"
+        ls -la gradle/wrapper/ || echo "gradle/wrapper not found"
+        ls -la gradlew || echo "gradlew not found"
         
     - name: 🔧 Grant execute permission for gradlew
-      run: chmod +x ./backend/gradlew
+      run: chmod +x gradlew
       
     - name: 🧪 Run tests
       run: cd backend && ./gradlew test

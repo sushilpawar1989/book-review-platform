@@ -49,14 +49,14 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Git status:"
         git status --porcelain
-        echo "Backend directory contents:"
-        ls -la backend/
+        echo "Current directory contents:"
+        ls -la
         echo "Gradle wrapper files:"
-        ls -la backend/gradle/wrapper/ || echo "gradle/wrapper not found"
-        ls -la backend/gradlew || echo "gradlew not found"
+        ls -la gradle/wrapper/ || echo "gradle/wrapper not found"
+        ls -la gradlew || echo "gradlew not found"
         
     - name: 🔧 Make Gradlew Executable
-      run: chmod +x ./backend/gradlew
+      run: chmod +x gradlew
       
     - name: 🧹 Clean Project
       run: cd backend && ./gradlew clean
