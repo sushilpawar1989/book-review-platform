@@ -286,29 +286,4 @@ jobs:
         echo "Frontend URL: $(terraform output -raw frontend_url)"
       working-directory: ./infra/backend
 
-  # Notification
-  notify:
-    name: 📢 Notify
-    runs-on: ubuntu-latest
-    needs: [backend, frontend, security]
-    if: always()
-    
-    steps:
-    - name: 📢 Slack Notification
-      uses: 8398a7/action-slack@v3
-      if: always()
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        text: |
-          🚀 Book Review Platform CI/CD Pipeline
-          
-          📊 Results:
-          • Backend: ${{ needs.backend.result }}
-          • Frontend: ${{ needs.frontend.result }}  
-          • Security: ${{ needs.security.result }}
-          
-          🔗 Commit: ${{ github.sha }}
-          👤 Author: ${{ github.actor }}
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+# Notification job removed - no Slack webhook configured
