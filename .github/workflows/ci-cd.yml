@@ -97,12 +97,15 @@ jobs:
         echo "Checking if JAR was built..."
         ls -la build/libs/ || echo "build/libs directory not found"
         find . -name "*.jar" || echo "No JAR files found"
+        echo "Current working directory: $(pwd)"
+        echo "Files in backend/build/libs/:"
+        ls -la ../build/libs/ || echo "No backend/build/libs directory found"
       
     - name: 📦 Upload Backend Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: backend-jar
-        path: build/libs/*.jar
+        path: backend/build/libs/*.jar
         retention-days: 30
 
   # Frontend Build and Test  
