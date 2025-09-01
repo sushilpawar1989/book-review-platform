@@ -73,26 +73,4 @@ resource "aws_security_group" "ecs_tasks" {
   }
 }
 
-# Security Group for RDS (if needed in future)
-resource "aws_security_group" "rds" {
-  name_prefix = "${var.project_name}-${var.environment}-rds-"
-  vpc_id      = aws_vpc.main.id
-  description = "Security group for RDS database"
-
-  # Inbound from ECS tasks
-  ingress {
-    description     = "Database port from ECS tasks"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_tasks.id]
-  }
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-rds-sg"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+# Note: RDS security group removed - using H2 in-memory database for assignment

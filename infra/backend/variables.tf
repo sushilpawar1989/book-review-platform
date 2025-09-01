@@ -78,9 +78,9 @@ variable "jwt_secret" {
 }
 
 variable "database_url" {
-  description = "Database URL for the application"
+  description = "Database URL for the application (using H2 in-memory for assignment)"
   type        = string
-  default     = "jdbc:h2:mem:testdb" # Default to H2 in-memory for demo
+  default     = "jdbc:h2:mem:testdb" # H2 in-memory database - no external DB needed
 }
 
 variable "enable_logging" {
