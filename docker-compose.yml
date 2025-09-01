@@ -55,56 +55,10 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # Database (Optional - PostgreSQL for production)
-  database:
-    image: postgres:15-alpine
-    container_name: book-review-db
-    environment:
-      - POSTGRES_DB=bookreview
-      - POSTGRES_USER=bookuser
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-bookpassword}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql
-    ports:
-      - "5432:5432"
-    networks:
-      - book-review-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bookuser -d bookreview"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    profiles:
-      - production
 
-  # Redis (Optional - for caching)
-  redis:
-    image: redis:7-alpine
-    container_name: book-review-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - book-review-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    profiles:
-      - production
 
 volumes:
   backend_data:
-    driver: local
-  postgres_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:

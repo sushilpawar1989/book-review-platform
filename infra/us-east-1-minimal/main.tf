@@ -97,14 +97,8 @@ data "aws_lb" "existing" {
   name  = "book-review-minimal"
 }
 
-# Handle case where load balancer doesn't exist
-locals {
-  load_balancer_exists = try(data.aws_lb.existing[0].id, null) != null
-}
-
 # Application Load Balancer
 resource "aws_lb" "main" {
-  count              = local.load_balancer_exists ? 0 : 1
   name               = "book-review-minimal"
   internal           = false
   load_balancer_type = "application"
@@ -121,8 +115,8 @@ resource "aws_lb" "main" {
 
 # Use existing or new load balancer
 locals {
-  load_balancer_arn = local.load_balancer_exists ? data.aws_lb.existing[0].arn : aws_lb.main[0].arn
-  load_balancer_id  = local.load_balancer_exists ? data.aws_lb.existing[0].dns_name : aws_lb.main[0].dns_name
+  load_balancer_arn = aws_lb.main.arn
+  load_balancer_id  = aws_lb.main.dns_name
 }
 
 # Check if Backend Target Group already exists
@@ -133,7 +127,6 @@ data "aws_lb_target_group" "existing_backend" {
 
 # Target Group for Backend
 resource "aws_lb_target_group" "backend" {
-  count      = data.aws_lb_target_group.existing_backend[0].id == null ? 1 : 0
   name       = "book-review-backend"
   port       = 8080
   protocol   = "HTTP"
@@ -146,7 +139,7 @@ resource "aws_lb_target_group" "backend" {
     unhealthy_threshold = 2
     timeout             = 5
     interval            = 30
-    path                = "/api/books"
+    path                = "/actuator/health"
     matcher             = "200"
   }
 
@@ -158,7 +151,7 @@ resource "aws_lb_target_group" "backend" {
 
 # Use existing or new backend target group
 locals {
-  backend_target_group_arn = data.aws_lb_target_group.existing_backend[0].id != null ? data.aws_lb_target_group.existing_backend[0].arn : aws_lb_target_group.backend[0].arn
+  backend_target_group_arn = aws_lb_target_group.backend.arn
 }
 
 # Check if Frontend Target Group already exists
@@ -169,7 +162,6 @@ data "aws_lb_target_group" "existing_frontend" {
 
 # Target Group for Frontend
 resource "aws_lb_target_group" "frontend" {
-  count      = data.aws_lb_target_group.existing_frontend[0].id == null ? 1 : 0
   name       = "book-review-frontend"
   port       = 80
   protocol   = "HTTP"
@@ -194,7 +186,7 @@ resource "aws_lb_target_group" "frontend" {
 
 # Use existing or new frontend target group
 locals {
-  frontend_target_group_arn = data.aws_lb_target_group.existing_frontend[0].id != null ? data.aws_lb_target_group.existing_frontend[0].arn : aws_lb_target_group.frontend[0].arn
+  frontend_target_group_arn = aws_lb_target_group.frontend.arn
 }
 
 # ALB Listener
@@ -234,7 +226,6 @@ data "aws_iam_role" "existing_execution_role" {
 
 # IAM Role for ECS Task Execution
 resource "aws_iam_role" "ecs_execution_role" {
-  count = data.aws_iam_role.existing_execution_role[0].id == null ? 1 : 0
   name = "book-review-ecs-execution-role"
 
   assume_role_policy = jsonencode({
@@ -257,14 +248,13 @@ resource "aws_iam_role" "ecs_execution_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
-  count      = data.aws_iam_role.existing_execution_role[0].id == null ? 1 : 0
-  role       = aws_iam_role.ecs_execution_role[0].name
+  role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 # Use existing or new execution role
 locals {
-  execution_role_arn = data.aws_iam_role.existing_execution_role[0].id != null ? data.aws_iam_role.existing_execution_role[0].arn : aws_iam_role.ecs_execution_role[0].arn
+  execution_role_arn = aws_iam_role.ecs_execution_role.arn
 }
 
 # Check if ECS Task Role already exists
@@ -275,7 +265,6 @@ data "aws_iam_role" "existing_task_role" {
 
 # IAM Role for ECS Task
 resource "aws_iam_role" "ecs_task_role" {
-  count = data.aws_iam_role.existing_task_role[0].id == null ? 1 : 0
   name = "book-review-ecs-task-role"
 
   assume_role_policy = jsonencode({
@@ -299,7 +288,7 @@ resource "aws_iam_role" "ecs_task_role" {
 
 # Use existing or new task role
 locals {
-  task_role_arn = data.aws_iam_role.existing_task_role[0].id != null ? data.aws_iam_role.existing_task_role[0].arn : aws_iam_role.ecs_task_role[0].arn
+  task_role_arn = aws_iam_role.ecs_task_role.arn
 }
 
 # ECS Cluster
@@ -370,23 +359,15 @@ resource "aws_ecs_task_definition" "backend" {
         },
         {
           name  = "SPRING_JPA_HIBERNATE_DDL_AUTO"
-          value = "create-drop"
+          value = "validate"
         },
         {
           name  = "SPRING_CACHE_TYPE"
           value = "none"
         },
         {
-          name  = "SPRING_CACHE_CACHE_NAMES"
-          value = ""
-        },
-        {
-          name  = "SPRING_SQL_INIT_MODE"
-          value = "always"
-        },
-        {
-          name  = "SPRING_SQL_INIT_ORDER"
-          value = "1"
+          name  = "SPRING_H2_CONSOLE_ENABLED"
+          value = "false"
         },
         {
           name  = "SPRING_SQL_INIT_MODE"
@@ -454,8 +435,20 @@ resource "aws_ecs_task_definition" "frontend" {
   }
 }
 
+# Check if CloudWatch Log Groups already exist
+data "aws_cloudwatch_log_group" "existing_backend_logs" {
+  count = 1
+  name  = "/ecs/book-review-backend"
+}
+
+data "aws_cloudwatch_log_group" "existing_frontend_logs" {
+  count = 1
+  name  = "/ecs/book-review-frontend"
+}
+
 # CloudWatch Log Groups
 resource "aws_cloudwatch_log_group" "backend" {
+
   name              = "/ecs/book-review-backend"
   retention_in_days = 1  # Minimal retention to save costs
 
@@ -466,6 +459,7 @@ resource "aws_cloudwatch_log_group" "backend" {
 }
 
 resource "aws_cloudwatch_log_group" "frontend" {
+
   name              = "/ecs/book-review-frontend"
   retention_in_days = 1  # Minimal retention to save costs
 
@@ -473,6 +467,12 @@ resource "aws_cloudwatch_log_group" "frontend" {
     Name    = "book-review-frontend-logs"
     Project = "book-review-platform"
   }
+}
+
+# Use existing or new log groups
+locals {
+  backend_log_group_name  = aws_cloudwatch_log_group.backend.name
+  frontend_log_group_name = aws_cloudwatch_log_group.frontend.name
 }
 
 # ECS Service for Backend
