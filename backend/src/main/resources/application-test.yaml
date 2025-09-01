@@ -6,6 +6,7 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password: password
+    initialization-mode: never
     
   # JPA Configuration for Testing
   jpa:
@@ -20,6 +21,11 @@ spring:
   sql:
     init:
       mode: never
+      
+  # Disable auto-configuration for DataSource initialization
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.sql.init.DataSourceInitializationConfiguration
         
   # Cache Configuration for Testing
   cache:
