@@ -188,7 +188,9 @@ class UserProfileServiceTest {
             mockedSecurityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(1L);
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(userRepository.existsById(1L)).thenReturn(true);
             when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+            when(bookRepository.existsById(1L)).thenReturn(true);
             when(userRepository.save(any(User.class))).thenReturn(user);
 
             // When
@@ -207,8 +209,9 @@ class UserProfileServiceTest {
         try (MockedStatic<SecurityUtils> mockedSecurityUtils = mockStatic(SecurityUtils.class)) {
             mockedSecurityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(1L);
 
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+            when(userRepository.existsById(1L)).thenReturn(true);
+            when(bookRepository.existsById(1L)).thenReturn(true);
+            when(userRepository.existsFavoriteBookByUserIdAndBookId(1L, 1L)).thenReturn(true);
 
             // When & Then
             assertThrows(IllegalArgumentException.class, () -> userService.addBookToFavorites(1L));
@@ -224,7 +227,9 @@ class UserProfileServiceTest {
             mockedSecurityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(1L);
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(userRepository.existsById(1L)).thenReturn(true);
             when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+            when(bookRepository.existsById(1L)).thenReturn(true);
             when(userRepository.save(any(User.class))).thenReturn(user);
 
             // When

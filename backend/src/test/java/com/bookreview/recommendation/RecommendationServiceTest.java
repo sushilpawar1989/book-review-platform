@@ -140,7 +140,7 @@ class RecommendationServiceTest {
             // Then
             assertNotNull(result);
             assertFalse(result.isEmpty());
-            assertTrue(result.stream().anyMatch(r -> r.getStrategy().equals("TOP_RATED")));
+            assertTrue(result.stream().anyMatch(r -> r.getStrategy().equals(RecommendationStrategy.TOP_RATED)));
         }
     }
 
@@ -184,7 +184,7 @@ class RecommendationServiceTest {
         // Then
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals("TOP_RATED", result.get(0).getStrategy());
+        assertEquals(RecommendationStrategy.TOP_RATED, result.get(0).getStrategy());
         assertTrue(result.get(0).getReason().contains("excellent rating"));
     }
 
@@ -241,7 +241,7 @@ class RecommendationServiceTest {
         // Then
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        assertEquals("AI_POWERED", result.get(0).getStrategy());
+        assertEquals(RecommendationStrategy.AI_POWERED, result.get(0).getStrategy());
         assertTrue(result.get(0).getReason().contains("AI-powered"));
     }
 
