@@ -16,7 +16,7 @@ resource "aws_lb" "main" {
 
 # Target Group for Backend
 resource "aws_lb_target_group" "backend" {
-  name        = "${var.project_name}-backend-${var.environment}"
+  name        = "brp-backend-${var.environment}"
   port        = var.container_port
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
@@ -35,7 +35,7 @@ resource "aws_lb_target_group" "backend" {
   }
 
   tags = {
-    Name        = "${var.project_name}-backend-tg-${var.environment}"
+    Name        = "brp-backend-tg-${var.environment}"
     Environment = var.environment
   }
 }
