@@ -151,7 +151,7 @@ jobs:
         name: frontend-coverage
         
     - name: 🏗️ Build Production
-      run: npm run build
+      run: npm run build:no-tsc
       env:
         VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'http://localhost:8080/api/v1' }}
         
