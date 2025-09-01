@@ -6,7 +6,7 @@ import { PaginationParams } from '@/types/book'
 export const useUserProfile = (userId: string) => {
   return useQuery({
     queryKey: ['user', 'profile', userId],
-    queryFn: () => userApi.getProfile(userId),
+    queryFn: () => userApi.getProfile(),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache
     refetchOnMount: true,
