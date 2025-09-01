@@ -1,108 +1,167 @@
 #!/bin/bash
 
-echo "🚀 AWS Deployment Script for Book Review Platform"
-echo "================================================="
+# AWS Deployment Script for Book Review Platform
+# This script builds and pushes Docker images to ECR, then deploys infrastructure
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+PROJECT_NAME="book-review-platform"
+ENVIRONMENT="dev"
+AWS_REGION="us-east-1"
+BACKEND_IMAGE_TAG="latest"
+FRONTEND_IMAGE_TAG="latest"
+
+echo -e "${BLUE}🚀 Starting AWS deployment for ${PROJECT_NAME}...${NC}"
 
 # Check if AWS CLI is installed
 if ! command -v aws &> /dev/null; then
-    echo "❌ AWS CLI not found. Please install it first:"
-    echo "   https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
+    echo -e "${RED}❌ AWS CLI is not installed. Please install it first.${NC}"
+    exit 1
+fi
+
+# Check if Docker is running
+if ! docker info &> /dev/null; then
+    echo -e "${RED}❌ Docker is not running. Please start Docker first.${NC}"
     exit 1
 fi
 
 # Check if Terraform is installed
 if ! command -v terraform &> /dev/null; then
-    echo "❌ Terraform not found. Please install it first:"
-    echo "   https://learn.hashicorp.com/tutorials/terraform/install-cli"
+    echo -e "${RED}❌ Terraform is not installed. Please install it first.${NC}"
     exit 1
 fi
 
-# Check AWS credentials
-echo "🔍 Checking AWS credentials..."
-aws sts get-caller-identity > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-    echo "❌ AWS credentials not configured. Please run:"
-    echo "   aws configure"
-    echo "   Or set environment variables:"
-    echo "   export AWS_ACCESS_KEY_ID=your-key"
-    echo "   export AWS_SECRET_ACCESS_KEY=your-secret"
-    echo "   export AWS_DEFAULT_REGION=us-east-1"
-    exit 1
-fi
+echo -e "${GREEN}✅ Prerequisites check passed${NC}"
 
-echo "✅ AWS credentials configured"
+# Navigate to project root
+cd "$(dirname "$0")"
 
-# Get user inputs
-read -p "🔑 Enter JWT Secret (or press Enter for default): " JWT_SECRET
-if [ -z "$JWT_SECRET" ]; then
-    JWT_SECRET="YjM2N2Q4ZWZhMTJjNGU5OGI3ZjNkMmE4YzVlNjRiOWQ5ZmE3YjNlOGM0ZDZhOWIyZjhlNzMxNGM5ZGI2YWY4ZA=="
-fi
-
-read -p "🤖 Enter OpenAI API Key (optional, press Enter to skip): " OPENAI_KEY
-
-read -p "🌍 Enter AWS Region (default: us-east-1): " AWS_REGION
-if [ -z "$AWS_REGION" ]; then
-    AWS_REGION="us-east-1"
-fi
-
-read -p "📝 Enter Environment (dev/staging/prod, default: dev): " ENVIRONMENT
-if [ -z "$ENVIRONMENT" ]; then
-    ENVIRONMENT="dev"
-fi
-
-# Navigate to Terraform directory
+# Step 1: Initialize Terraform
+echo -e "${BLUE}📋 Initializing Terraform...${NC}"
 cd infra/backend
-
-echo "🏗️ Initializing Terraform..."
 terraform init
 
-echo "📋 Creating Terraform plan..."
-terraform plan \
-    -var="jwt_secret=$JWT_SECRET" \
-    -var="openai_api_key=$OPENAI_KEY" \
-    -var="aws_region=$AWS_REGION" \
-    -var="environment=$ENVIRONMENT" \
-    -out=tfplan
+# Step 2: Get ECR repository URLs
+echo -e "${BLUE}🔍 Getting ECR repository URLs...${NC}"
+BACKEND_ECR_URL=$(terraform output -raw ecr_backend_repository 2>/dev/null || echo "")
+FRONTEND_ECR_URL=$(terraform output -raw ecr_frontend_repository 2>/dev/null || echo "")
 
-echo ""
-echo "📊 Terraform Plan Summary:"
-echo "=========================="
-echo "🌍 Region: $AWS_REGION"
-echo "📝 Environment: $ENVIRONMENT"
-echo "🔑 JWT Secret: [CONFIGURED]"
-echo "🤖 OpenAI Key: $([ -n "$OPENAI_KEY" ] && echo '[CONFIGURED]' || echo '[NOT SET]')"
-echo ""
-
-read -p "🚀 Do you want to apply this plan? (y/N): " CONFIRM
-if [[ $CONFIRM =~ ^[Yy]$ ]]; then
-    echo "🚀 Applying Terraform configuration..."
+if [ -z "$BACKEND_ECR_URL" ] || [ -z "$FRONTEND_ECR_URL" ]; then
+    echo -e "${YELLOW}⚠️  ECR repositories not found. Creating infrastructure first...${NC}"
+    
+    # Plan and apply infrastructure
+    echo -e "${BLUE}📋 Planning Terraform changes...${NC}"
+    terraform plan -out=tfplan
+    
+    echo -e "${BLUE}🚀 Applying Terraform changes...${NC}"
     terraform apply tfplan
     
-    if [ $? -eq 0 ]; then
-        echo ""
-        echo "🎉 Deployment completed successfully!"
-        echo ""
-        echo "📊 Deployment Information:"
-        echo "========================="
-        terraform output
-        echo ""
-        echo "🔗 Next Steps:"
-        echo "1. Note the Load Balancer URL above"
-        echo "2. Update your frontend VITE_API_BASE_URL to point to the backend"
-        echo "3. Deploy your frontend to S3/CloudFront or update the container image"
-        echo ""
-        echo "📋 Useful Commands:"
-        echo "- View resources: terraform show"
-        echo "- Destroy resources: terraform destroy"
-        echo "- Update deployment: terraform apply"
-    else
-        echo "❌ Deployment failed. Check the error messages above."
-        exit 1
-    fi
-else
-    echo "⏹️ Deployment cancelled."
-    rm -f tfplan
+    # Get ECR URLs after creation
+    BACKEND_ECR_URL=$(terraform output -raw ecr_backend_repository)
+    FRONTEND_ECR_URL=$(terraform output -raw ecr_frontend_repository)
+    
+    echo -e "${GREEN}✅ Infrastructure created successfully${NC}"
 fi
 
-cd ../..
-echo "✅ Done!"
+echo -e "${GREEN}📦 Backend ECR: ${BACKEND_ECR_URL}${NC}"
+echo -e "${GREEN}📦 Frontend ECR: ${FRONTEND_ECR_URL}${NC}"
+
+# Step 3: Login to ECR
+echo -e "${BLUE}🔐 Logging into ECR...${NC}"
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $BACKEND_ECR_URL
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $FRONTEND_ECR_URL
+
+# Step 4: Build and push Backend image
+echo -e "${BLUE}🏗️  Building Backend Docker image...${NC}"
+cd ../../backend
+docker build -t $PROJECT_NAME-backend:$BACKEND_IMAGE_TAG .
+
+echo -e "${BLUE}🏷️  Tagging Backend image for ECR...${NC}"
+docker tag $PROJECT_NAME-backend:$BACKEND_IMAGE_TAG $BACKEND_ECR_URL:$BACKEND_IMAGE_TAG
+
+echo -e "${BLUE}📤 Pushing Backend image to ECR...${NC}"
+docker push $BACKEND_ECR_URL:$BACKEND_IMAGE_TAG
+
+echo -e "${GREEN}✅ Backend image pushed successfully${NC}"
+
+# Step 5: Build and push Frontend image
+echo -e "${BLUE}🏗️  Building Frontend Docker image...${NC}"
+cd ../frontend
+docker build -t $PROJECT_NAME-frontend:$FRONTEND_IMAGE_TAG .
+
+echo -e "${BLUE}🏷️  Tagging Frontend image for ECR...${NC}"
+docker tag $PROJECT_NAME-frontend:$FRONTEND_IMAGE_TAG $FRONTEND_ECR_URL:$FRONTEND_IMAGE_TAG
+
+echo -e "${BLUE}📤 Pushing Frontend image to ECR...${NC}"
+docker push $FRONTEND_ECR_URL:$FRONTEND_IMAGE_TAG
+
+echo -e "${GREEN}✅ Frontend image pushed successfully${NC}"
+
+# Step 6: Update ECS services to use new images
+echo -e "${BLUE}🔄 Updating ECS services...${NC}"
+cd ../infra/backend
+
+# Force new deployment by updating task definition
+echo -e "${BLUE}📋 Planning ECS update...${NC}"
+terraform plan -out=tfplan
+
+echo -e "${BLUE}🚀 Applying ECS update...${NC}"
+terraform apply tfplan
+
+# Step 7: Wait for services to be stable
+echo -e "${BLUE}⏳ Waiting for ECS services to be stable...${NC}"
+CLUSTER_NAME=$(terraform output -raw ecs_cluster_name)
+BACKEND_SERVICE=$(terraform output -raw backend_service_name)
+FRONTEND_SERVICE=$(terraform output -raw frontend_service_name)
+
+echo -e "${BLUE}🔄 Waiting for Backend service to be stable...${NC}"
+aws ecs wait services-stable \
+    --cluster $CLUSTER_NAME \
+    --services $BACKEND_SERVICE \
+    --region $AWS_REGION
+
+echo -e "${BLUE}🔄 Waiting for Frontend service to be stable...${NC}"
+aws ecs wait services-stable \
+    --cluster $CLUSTER_NAME \
+    --services $FRONTEND_SERVICE \
+    --region $AWS_REGION
+
+# Step 8: Get deployment URLs
+echo -e "${BLUE}🔍 Getting deployment URLs...${NC}"
+BACKEND_URL=$(terraform output -raw backend_url)
+FRONTEND_URL=$(terraform output -raw frontend_url)
+ALB_DNS=$(terraform output -raw alb_dns_name)
+
+echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
+echo -e "${GREEN}📱 Frontend URL: ${FRONTEND_URL}${NC}"
+echo -e "${GREEN}🔧 Backend URL: ${BACKEND_URL}${NC}"
+echo -e "${GREEN}🌐 ALB DNS: ${ALB_DNS}${NC}"
+
+# Step 9: Health check
+echo -e "${BLUE}🏥 Performing health checks...${NC}"
+
+# Check backend health
+echo -e "${BLUE}🔍 Checking Backend health...${NC}"
+if curl -f -s "${BACKEND_URL}/actuator/health" > /dev/null; then
+    echo -e "${GREEN}✅ Backend is healthy${NC}"
+else
+    echo -e "${RED}❌ Backend health check failed${NC}"
+fi
+
+# Check frontend health
+echo -e "${BLUE}🔍 Checking Frontend health...${NC}"
+if curl -f -s "${FRONTEND_URL}" > /dev/null; then
+    echo -e "${GREEN}✅ Frontend is healthy${NC}"
+else
+    echo -e "${RED}❌ Frontend health check failed${NC}"
+fi
+
+echo -e "${GREEN}🎊 All done! Your Book Review Platform is now running on AWS!${NC}"

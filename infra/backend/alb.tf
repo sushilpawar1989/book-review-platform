@@ -40,7 +40,33 @@ resource "aws_lb_target_group" "backend" {
   }
 }
 
-# Listener for Backend
+# Target Group for Frontend
+resource "aws_lb_target_group" "frontend" {
+  name        = "brp-frontend-${var.environment}"
+  port        = var.frontend_container_port
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = var.frontend_health_check_path
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 2
+  }
+
+  tags = {
+    Name        = "brp-frontend-tg-${var.environment}"
+    Environment = var.environment
+  }
+}
+
+# Listener for Backend (Port 80)
 resource "aws_lb_listener" "backend" {
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
@@ -53,6 +79,23 @@ resource "aws_lb_listener" "backend" {
 
   tags = {
     Name        = "${var.project_name}-backend-listener-${var.environment}"
+    Environment = var.environment
+  }
+}
+
+# Listener for Frontend (Port 3000)
+resource "aws_lb_listener" "frontend" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "3000"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend.arn
+  }
+
+  tags = {
+    Name        = "${var.project_name}-frontend-listener-${var.environment}"
     Environment = var.environment
   }
 }

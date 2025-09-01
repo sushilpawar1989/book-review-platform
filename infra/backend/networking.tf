@@ -33,44 +33,19 @@ resource "aws_subnet" "public" {
   }
 }
 
-# Private Subnets
+# Private Subnets (configured as public for development - ECS tasks need ECR access)
 resource "aws_subnet" "private" {
   count = length(var.private_subnet_cidrs)
 
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet_cidrs[count.index]
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.private_subnet_cidrs[count.index]
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  map_public_ip_on_launch = true  # Enable for ECS tasks to access ECR without NAT Gateway
 
   tags = {
     Name = "${var.project_name}-${var.environment}-private-subnet-${count.index + 1}"
     Type = "Private"
   }
-}
-
-# Elastic IPs for NAT Gateways
-resource "aws_eip" "nat" {
-  count = length(var.public_subnet_cidrs)
-
-  domain = "vpc"
-  depends_on = [aws_internet_gateway.main]
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-nat-eip-${count.index + 1}"
-  }
-}
-
-# NAT Gateways
-resource "aws_nat_gateway" "main" {
-  count = length(var.public_subnet_cidrs)
-
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-nat-gateway-${count.index + 1}"
-  }
-
-  depends_on = [aws_internet_gateway.main]
 }
 
 # Public Route Table
@@ -87,15 +62,15 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Private Route Tables
+# Private Route Tables (using internet gateway for ECS ECR access)
 resource "aws_route_table" "private" {
   count = length(var.private_subnet_cidrs)
 
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id  # Allow ECS tasks to access ECR
   }
 
   tags = {

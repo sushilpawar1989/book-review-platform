@@ -8,7 +8,7 @@ output "backend_url" {
 
 output "frontend_url" {
   description = "Frontend application URL"
-  value       = "http://${aws_lb.main.dns_name}"
+  value       = "http://${aws_lb.main.dns_name}:3000"
 }
 
 output "ecr_backend_repository" {
@@ -36,7 +36,12 @@ output "ecs_cluster_name" {
   value       = aws_ecs_cluster.main.name
 }
 
-output "ecs_service_name" {
-  description = "ECS service name"
+output "backend_service_name" {
+  description = "Backend ECS service name"
   value       = aws_ecs_service.backend.name
+}
+
+output "frontend_service_name" {
+  description = "Frontend ECS service name"
+  value       = aws_ecs_service.frontend.name
 }

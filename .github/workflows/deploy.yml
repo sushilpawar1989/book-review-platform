@@ -52,10 +52,10 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build backend image
+        # Build backend image with correct platform for Fargate
         cd backend
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-backend:$IMAGE_TAG .
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-backend:latest .
+        docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY-backend:$IMAGE_TAG .
+        docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY-backend:latest .
         
         # Push to ECR
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-backend:$IMAGE_TAG
@@ -69,12 +69,10 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build frontend image
+        # Build frontend image with correct platform for Fargate
         cd frontend
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-frontend:$IMAGE_TAG \
-          --build-arg VITE_API_BASE_URL=https://api.yourdomain.com/api/v1 .
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY-frontend:latest \
-          --build-arg VITE_API_BASE_URL=https://api.yourdomain.com/api/v1 .
+        docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY-frontend:$IMAGE_TAG .
+        docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY-frontend:latest .
         
         # Push to ECR
         docker push $ECR_REGISTRY/$ECR_REPOSITORY-frontend:$IMAGE_TAG
@@ -167,6 +165,9 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
           SPRING_PROFILES_ACTIVE=production
+          SPRING_SECURITY_JWT_EXPIRATION=86400000
+          SPRING_SECURITY_JWT_REFRESH_EXPIRATION=604800000
+          SPRING_CACHE_TYPE=none
           
     - name: 🚀 Deploy to ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1

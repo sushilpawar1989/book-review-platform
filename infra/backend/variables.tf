@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
-  default     = "us-west-2"
+  default     = "us-east-1"
 }
 
 variable "environment" {
@@ -70,6 +70,7 @@ variable "health_check_path" {
   default     = "/actuator/health"
 }
 
+# JWT Configuration
 variable "jwt_secret" {
   description = "JWT secret for the application"
   type        = string
@@ -77,23 +78,93 @@ variable "jwt_secret" {
   default     = "YjM2N2Q4ZWZhMTJjNGU5OGI3ZjNkMmE4YzVlNjRiOWQ5ZmE3YjNlOGM0ZDZhOWIyZjhlNzMxNGM5ZGI2YWY4ZGFiMzY3ZDhlZmExMmM0ZTk4Yjc="
 }
 
-variable "database_url" {
-  description = "Database URL for the application (using H2 in-memory for assignment)"
+variable "jwt_expiration" {
+  description = "JWT expiration time in milliseconds"
   type        = string
-  default     = "jdbc:h2:mem:testdb" # H2 in-memory database - no external DB needed
+  default     = "86400000"
+}
+
+variable "jwt_refresh_expiration" {
+  description = "JWT refresh expiration time in milliseconds"
+  type        = string
+  default     = "604800000"
+}
+
+# Database Configuration
+variable "database_url" {
+  description = "Database URL for the application"
+  type        = string
+  default     = "jdbc:h2:mem:bookreview"
+}
+
+variable "hibernate_ddl_auto" {
+  description = "Hibernate DDL auto mode"
+  type        = string
+  default     = "validate"
+}
+
+variable "sql_init_mode" {
+  description = "SQL initialization mode"
+  type        = string
+  default     = "never"
+}
+
+# Cache Configuration
+variable "cache_type" {
+  description = "Spring cache type"
+  type        = string
+  default     = "none"
+}
+
+variable "cache_names" {
+  description = "Spring cache names"
+  type        = string
+  default     = ""
+}
+
+# OpenAI Configuration
+variable "openai_api_key" {
+  description = "OpenAI API key for recommendations"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+# Frontend Configuration
+variable "frontend_cpu" {
+  description = "CPU units for frontend task (1024 = 1 vCPU)"
+  type        = number
+  default     = 256
+}
+
+variable "frontend_memory" {
+  description = "Memory for frontend task in MB"
+  type        = number
+  default     = 512
+}
+
+variable "frontend_desired_count" {
+  description = "Desired number of frontend tasks"
+  type        = number
+  default     = 2
+}
+
+variable "frontend_container_port" {
+  description = "Port exposed by frontend container"
+  type        = number
+  default     = 80
+}
+
+variable "frontend_health_check_path" {
+  description = "Health check path for frontend"
+  type        = string
+  default     = "/"
 }
 
 variable "enable_logging" {
   description = "Enable CloudWatch logging"
   type        = bool
   default     = true
-}
-
-variable "openai_api_key" {
-  description = "OpenAI API key for recommendations"
-  type        = string
-  sensitive   = true
-  default     = ""
 }
 
 variable "domain_name" {

@@ -257,6 +257,7 @@ jobs:
       with:
         context: ./backend
         file: ./backend/Dockerfile
+        platforms: linux/amd64
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ steps.login-ecr.outputs.registry }}/book-review-backend:latest
@@ -274,6 +275,7 @@ jobs:
       with:
         context: ./frontend
         file: ./frontend/Dockerfile
+        platforms: linux/amd64
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ steps.login-ecr.outputs.registry }}/book-review-frontend:latest
@@ -307,21 +309,22 @@ jobs:
         
     - name: 🔧 Terraform Init
       run: terraform init
-      working-directory: ./infra/us-east-1-minimal
+      working-directory: ./infra/backend
       
     - name: 📋 Terraform Plan
       run: terraform plan -out=tfplan
-      working-directory: ./infra/us-east-1-minimal
+      working-directory: ./infra/backend
       
     - name: 🚀 Terraform Apply
       run: terraform apply -auto-approve tfplan
-      working-directory: ./infra/us-east-1-minimal
+      working-directory: ./infra/backend
       
     - name: 📊 Output Deployment Info
       run: |
         echo "🎉 Deployment completed successfully!"
         echo "Backend URL: $(terraform output -raw backend_url)"
         echo "Frontend URL: $(terraform output -raw frontend_url)"
-      working-directory: ./infra/us-east-1-minimal
+        echo "ALB DNS: $(terraform output -raw alb_dns_name)"
+      working-directory: ./infra/backend
 
 # Notification job removed - no Slack webhook configured

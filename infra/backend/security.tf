@@ -4,11 +4,20 @@ resource "aws_security_group" "alb" {
   vpc_id      = aws_vpc.main.id
   description = "Security group for Application Load Balancer"
 
-  # HTTP inbound
+  # HTTP inbound (Backend)
   ingress {
-    description = "HTTP"
+    description = "HTTP Backend"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # HTTP inbound (Frontend)
+  ingress {
+    description = "HTTP Frontend"
+    from_port   = 3000
+    to_port     = 3000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -46,11 +55,20 @@ resource "aws_security_group" "ecs_tasks" {
   vpc_id      = aws_vpc.main.id
   description = "Security group for ECS tasks"
 
-  # Inbound from ALB
+  # Inbound from ALB for Backend
   ingress {
-    description     = "Application port from ALB"
+    description     = "Backend port from ALB"
     from_port       = var.container_port
     to_port         = var.container_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  # Inbound from ALB for Frontend
+  ingress {
+    description     = "Frontend port from ALB"
+    from_port       = var.frontend_container_port
+    to_port         = var.frontend_container_port
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }

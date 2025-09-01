@@ -19,6 +19,9 @@ RUN npm run build
 # Production stage with Nginx
 FROM nginx:alpine
 
+# Remove default nginx configuration
+RUN rm -rf /etc/nginx/conf.d/*
+
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 
