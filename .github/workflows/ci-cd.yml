@@ -222,6 +222,15 @@ jobs:
     - name: 🔧 Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       
+    - name: 🔍 Debug AWS Values
+      run: |
+        echo "=== AWS Credentials Debug ==="
+        echo "Access Key ID: ${{ secrets.AWS_ACCESS_KEY_ID }}"
+        echo "Secret Key Length: ${#AWS_SECRET_ACCESS_KEY}"
+        echo "Secret Key First 10 chars: ${AWS_SECRET_ACCESS_KEY:0:10}..."
+        echo "Region: ${{ secrets.AWS_REGION }}"
+        echo "================================"
+        
     - name: 🔐 Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
