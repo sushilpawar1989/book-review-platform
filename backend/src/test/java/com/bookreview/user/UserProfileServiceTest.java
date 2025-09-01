@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -187,22 +188,20 @@ class UserProfileServiceTest {
         try (MockedStatic<SecurityUtils> mockedSecurityUtils = mockStatic(SecurityUtils.class)) {
             mockedSecurityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(1L);
 
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(userRepository.existsById(1L)).thenReturn(true);
-            when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
             when(bookRepository.existsById(1L)).thenReturn(true);
-            when(userRepository.save(any(User.class))).thenReturn(user);
+            when(userRepository.existsFavoriteBookByUserIdAndBookId(1L, 1L)).thenReturn(false);
 
             // When
             userService.addBookToFavorites(1L);
 
             // Then
-            verify(userRepository).save(any(User.class));
+            verify(userRepository).addBookToUserFavorites(1L, 1L);
         }
     }
 
     @Test
-    void addBookToFavorites_ShouldThrowException_WhenBookAlreadyInFavorites() {
+    void addBookToFavorites_ShouldDoNothing_WhenBookAlreadyInFavorites() {
         // Given
         user.getFavoriteBooks().add(book); // Book already in favorites
 
@@ -213,8 +212,11 @@ class UserProfileServiceTest {
             when(bookRepository.existsById(1L)).thenReturn(true);
             when(userRepository.existsFavoriteBookByUserIdAndBookId(1L, 1L)).thenReturn(true);
 
-            // When & Then
-            assertThrows(IllegalArgumentException.class, () -> userService.addBookToFavorites(1L));
+            // When
+            userService.addBookToFavorites(1L);
+
+            // Then - should not call addBookToUserFavorites since book is already in favorites
+            verify(userRepository, never()).addBookToUserFavorites(1L, 1L);
         }
     }
 
@@ -226,17 +228,15 @@ class UserProfileServiceTest {
         try (MockedStatic<SecurityUtils> mockedSecurityUtils = mockStatic(SecurityUtils.class)) {
             mockedSecurityUtils.when(SecurityUtils::getCurrentUserId).thenReturn(1L);
 
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(userRepository.existsById(1L)).thenReturn(true);
-            when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
             when(bookRepository.existsById(1L)).thenReturn(true);
-            when(userRepository.save(any(User.class))).thenReturn(user);
+            when(userRepository.existsFavoriteBookByUserIdAndBookId(1L, 1L)).thenReturn(true);
 
             // When
             userService.removeBookFromFavorites(1L);
 
             // Then
-            verify(userRepository).save(any(User.class));
+            verify(userRepository).removeBookFromUserFavorites(1L, 1L);
         }
     }
 
