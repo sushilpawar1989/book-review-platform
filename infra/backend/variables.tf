@@ -37,7 +37,7 @@ variable "private_subnet_cidrs" {
 variable "container_image" {
   description = "Docker image for the backend application"
   type        = string
-  default     = "public.ecr.aws/nginx/nginx:latest" # Placeholder - replace with actual image
+  default     = ""
 }
 
 variable "container_port" {
@@ -87,4 +87,17 @@ variable "enable_logging" {
   description = "Enable CloudWatch logging"
   type        = bool
   default     = true
+}
+
+variable "openai_api_key" {
+  description = "OpenAI API key for recommendations"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "domain_name" {
+  description = "Domain name for the application (optional)"
+  type        = string
+  default     = ""
 }
