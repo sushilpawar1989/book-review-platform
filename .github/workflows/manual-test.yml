@@ -44,7 +44,7 @@ jobs:
       run: |
         echo "🏗️ Testing Backend Build..."
         cd backend
-        chmod +x gradlew
+        chmod +x ./gradlew
         ./gradlew clean build -x test
         echo "✅ Backend build successful!"
         

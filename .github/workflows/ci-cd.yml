@@ -41,17 +41,17 @@ jobs:
           ${{ runner.os }}-gradle-
           
     - name: 🔧 Make Gradlew Executable
-      run: chmod +x gradlew
+      run: chmod +x ./backend/gradlew
       
     - name: 🧹 Clean Project
-      run: ./gradlew clean
+      run: cd backend && ./gradlew clean
       
     - name: 🔍 Run Checkstyle
-      run: ./gradlew checkstyleMain checkstyleTest
+      run: cd backend && ./gradlew checkstyleMain checkstyleTest
       continue-on-error: true
       
     - name: 🧪 Run Tests
-      run: ./gradlew test
+      run: cd backend && ./gradlew test
       
     - name: 📊 Generate Test Report
       uses: dorny/test-reporter@v1
@@ -70,7 +70,7 @@ jobs:
         name: backend-coverage
         
     - name: 🏗️ Build JAR
-      run: ./gradlew build -x test
+      run: cd backend && ./gradlew build -x test
       
     - name: 📦 Upload Backend Artifacts
       uses: actions/upload-artifact@v4
