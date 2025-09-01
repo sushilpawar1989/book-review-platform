@@ -44,10 +44,10 @@ jobs:
       run: chmod +x gradlew
       
     - name: 🧪 Run tests
-      run: cd backend && ./gradlew test
+      run: ./gradlew test
       
     - name: 🏗️ Build with Gradle
-      run: cd backend && ./gradlew build
+      run: ./gradlew build
       
     - name: 📊 Upload test results
       uses: actions/upload-artifact@v4

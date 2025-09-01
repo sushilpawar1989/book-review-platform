@@ -59,14 +59,14 @@ jobs:
       run: chmod +x gradlew
       
     - name: 🧹 Clean Project
-      run: cd backend && ./gradlew clean
+      run: ./gradlew clean
       
     - name: 🔍 Run Checkstyle
-      run: cd backend && ./gradlew checkstyleMain checkstyleTest
+      run: ./gradlew checkstyleMain checkstyleTest
       continue-on-error: true
       
     - name: 🧪 Run Tests
-      run: cd backend && ./gradlew test
+      run: ./gradlew test
       
     - name: 📊 Generate Test Report
       uses: dorny/test-reporter@v1
@@ -85,7 +85,7 @@ jobs:
         name: backend-coverage
         
     - name: 🏗️ Build JAR
-      run: cd backend && ./gradlew build -x test
+      run: ./gradlew build -x test
       
     - name: 📦 Upload Backend Artifacts
       uses: actions/upload-artifact@v4
