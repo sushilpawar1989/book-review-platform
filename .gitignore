@@ -255,3 +255,6 @@ Thumbs.db
 # Application specific
 mcp.json
 rules.mdc.json
+infra/*/.terraform/
+infra/*/.terraform.lock.hcl
+infra/*/terraform.tfstate
