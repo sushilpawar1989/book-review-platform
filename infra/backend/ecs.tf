@@ -50,12 +50,12 @@ resource "aws_ecs_task_definition" "backend" {
         }
       ]
 
-      secrets = [
+      secrets = var.openai_api_key != "" ? [
         {
           name      = "OPENAI_API_KEY"
-          valueFrom = var.openai_api_key != "" ? var.openai_api_key : "dummy-key"
+          valueFrom = var.openai_api_key
         }
-      ]
+      ] : []
 
       logConfiguration = {
         logDriver = "awslogs"
