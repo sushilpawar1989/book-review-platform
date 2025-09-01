@@ -92,6 +92,12 @@ jobs:
       env:
         GRADLE_OPTS: "-Dorg.gradle.daemon=false"
       
+    - name: 🔍 Debug - Check if JAR was built
+      run: |
+        echo "Checking if JAR was built..."
+        ls -la build/libs/ || echo "build/libs directory not found"
+        find . -name "*.jar" || echo "No JAR files found"
+      
     - name: 📦 Upload Backend Artifacts
       uses: actions/upload-artifact@v4
       with:
