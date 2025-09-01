@@ -193,12 +193,12 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
-  # Docker Build (Optional)
+  # Docker Build (Optional) - Temporarily disabled
   docker:
     name: 🐳 Docker Build
     runs-on: ubuntu-latest
     needs: [backend, frontend]
-    if: github.ref == 'refs/heads/main'
+    if: false  # Temporarily disabled to focus on getting backend/frontend working
     
     steps:
     - name: 📥 Checkout Code
@@ -250,12 +250,12 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  # Deployment (Production)
+  # Deployment (Production) - Temporarily disabled
   deploy:
     name: 🚀 Deploy to Production
     runs-on: ubuntu-latest
     needs: [backend, frontend]  # Removed security dependency
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: false  # Temporarily disabled to focus on getting backend/frontend working
     environment: production
     
     steps:
