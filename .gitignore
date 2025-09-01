@@ -95,9 +95,9 @@ backend/target/
 backend/build/
 backend/out/
 backend/.gradle/
-backend/gradle/
-backend/gradlew
-backend/gradlew.bat
+# backend/gradle/ - Keep gradle wrapper for builds
+# backend/gradlew - Keep gradle wrapper for builds  
+# backend/gradlew.bat - Keep gradle wrapper for builds
 backend/bin/
 backend/.settings/
 backend/.project
@@ -165,6 +165,7 @@ coverage/
 
 # Build artifacts
 *.jar
+!backend/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 *.zip
@@ -176,7 +177,7 @@ coverage/
 *.dmg
 *.gz
 *.iso
-*.jar
+# *.jar - handled above with exception for gradle-wrapper.jar
 *.rar
 *.tar
 *.zip
