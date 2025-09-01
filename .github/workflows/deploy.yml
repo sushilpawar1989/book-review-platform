@@ -208,18 +208,13 @@ jobs:
         echo "❌ Deployment failed!"
         exit 1
         
-    - name: 📢 Slack Notification
-      if: always() && secrets.SLACK_WEBHOOK_URL
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        text: |
-          🚀 Book Review Platform Deployment
-          
-          📊 Status: ${{ needs.deploy-application.result == 'success' && '✅ SUCCESS' || '❌ FAILED' }}
-          🔗 Commit: ${{ github.sha }}
-          👤 Author: ${{ github.actor }}
-          🌍 Environment: Production
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: 📢 Summary
+      run: |
+        echo "🎉 Deployment Summary"
+        echo "===================="
+        echo "📊 Status: ${{ needs.deploy-application.result == 'success' && '✅ SUCCESS' || '❌ FAILED' }}"
+        echo "🔗 Commit: ${{ github.sha }}"
+        echo "👤 Author: ${{ github.actor }}"
+        echo "🌍 Environment: Production"
+        echo "🏗️ Backend Image: ${{ needs.build.outputs.backend-image }}"
+        echo "⚛️ Frontend Image: ${{ needs.build.outputs.frontend-image }}"

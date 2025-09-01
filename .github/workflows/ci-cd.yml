@@ -73,7 +73,7 @@ jobs:
       run: ./gradlew build -x test
       
     - name: 📦 Upload Backend Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: backend-jar
         path: backend/build/libs/*.jar
@@ -132,7 +132,7 @@ jobs:
         VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'http://localhost:8080/api/v1' }}
         
     - name: 📦 Upload Frontend Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: frontend-dist
         path: frontend/dist/
