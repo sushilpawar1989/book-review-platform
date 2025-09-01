@@ -131,7 +131,7 @@ class RecommendationServiceTest {
                     .thenReturn(topRatedBooks);
             
             Page<Book> genreBooks = new PageImpl<>(List.of(book1));
-            when(bookRepository.findBooksWithFilters(any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
+            when(bookRepository.findByGenre(any(Genre.class), any(Pageable.class)))
                     .thenReturn(genreBooks);
 
             // When
@@ -205,7 +205,7 @@ class RecommendationServiceTest {
                 .thenReturn(new PageImpl<>(List.of()));
         
         Page<Book> genreBooks = new PageImpl<>(List.of(book1));
-        when(bookRepository.findBooksWithFilters(any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
+        when(bookRepository.findByGenre(any(Genre.class), any(Pageable.class)))
                 .thenReturn(genreBooks);
 
         // When
