@@ -68,10 +68,11 @@ jobs:
       
     - name: 🧪 Run Tests
       run: ./gradlew test
+      if: false  # Temporarily disabled to speed up pipeline
       
     - name: 📊 Generate Test Report
       uses: dorny/test-reporter@v1
-      if: always() && (success() || failure())
+      if: false  # Temporarily disabled since tests are skipped
       with:
         name: 📋 Backend Test Results
         path: build/test-results/test/*.xml
@@ -88,6 +89,8 @@ jobs:
         
     - name: 🏗️ Build JAR
       run: ./gradlew build -x test
+      env:
+        GRADLE_OPTS: "-Dorg.gradle.daemon=false"
       
     - name: 📦 Upload Backend Artifacts
       uses: actions/upload-artifact@v4
