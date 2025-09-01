@@ -91,8 +91,20 @@ resource "aws_security_group" "ecs_tasks" {
   }
 }
 
+# Check if Load Balancer already exists
+data "aws_lb" "existing" {
+  count = 1
+  name  = "book-review-minimal"
+}
+
+# Handle case where load balancer doesn't exist
+locals {
+  load_balancer_exists = try(data.aws_lb.existing[0].id, null) != null
+}
+
 # Application Load Balancer
 resource "aws_lb" "main" {
+  count              = local.load_balancer_exists ? 0 : 1
   name               = "book-review-minimal"
   internal           = false
   load_balancer_type = "application"
@@ -107,12 +119,25 @@ resource "aws_lb" "main" {
   }
 }
 
+# Use existing or new load balancer
+locals {
+  load_balancer_arn = local.load_balancer_exists ? data.aws_lb.existing[0].arn : aws_lb.main[0].arn
+  load_balancer_id  = local.load_balancer_exists ? data.aws_lb.existing[0].dns_name : aws_lb.main[0].dns_name
+}
+
+# Check if Backend Target Group already exists
+data "aws_lb_target_group" "existing_backend" {
+  count = 1
+  name  = "book-review-backend"
+}
+
 # Target Group for Backend
 resource "aws_lb_target_group" "backend" {
-  name     = "book-review-backend"
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = data.aws_vpc.default.id
+  count      = data.aws_lb_target_group.existing_backend[0].id == null ? 1 : 0
+  name       = "book-review-backend"
+  port       = 8080
+  protocol   = "HTTP"
+  vpc_id     = data.aws_vpc.default.id
   target_type = "ip"
 
   health_check {
@@ -131,12 +156,24 @@ resource "aws_lb_target_group" "backend" {
   }
 }
 
+# Use existing or new backend target group
+locals {
+  backend_target_group_arn = data.aws_lb_target_group.existing_backend[0].id != null ? data.aws_lb_target_group.existing_backend[0].arn : aws_lb_target_group.backend[0].arn
+}
+
+# Check if Frontend Target Group already exists
+data "aws_lb_target_group" "existing_frontend" {
+  count = 1
+  name  = "book-review-frontend"
+}
+
 # Target Group for Frontend
 resource "aws_lb_target_group" "frontend" {
-  name     = "book-review-frontend"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = data.aws_vpc.default.id
+  count      = data.aws_lb_target_group.existing_frontend[0].id == null ? 1 : 0
+  name       = "book-review-frontend"
+  port       = 80
+  protocol   = "HTTP"
+  vpc_id     = data.aws_vpc.default.id
   target_type = "ip"
 
   health_check {
@@ -155,15 +192,20 @@ resource "aws_lb_target_group" "frontend" {
   }
 }
 
+# Use existing or new frontend target group
+locals {
+  frontend_target_group_arn = data.aws_lb_target_group.existing_frontend[0].id != null ? data.aws_lb_target_group.existing_frontend[0].arn : aws_lb_target_group.frontend[0].arn
+}
+
 # ALB Listener
 resource "aws_lb_listener" "main" {
-  load_balancer_arn = aws_lb.main.arn
+  load_balancer_arn = local.load_balancer_arn
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.frontend.arn
+    target_group_arn = local.frontend_target_group_arn
   }
 }
 
@@ -174,7 +216,7 @@ resource "aws_lb_listener_rule" "api" {
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.backend.arn
+    target_group_arn = local.backend_target_group_arn
   }
 
   condition {
@@ -184,8 +226,15 @@ resource "aws_lb_listener_rule" "api" {
   }
 }
 
+# Check if ECS Execution Role already exists
+data "aws_iam_role" "existing_execution_role" {
+  count = 1
+  name  = "book-review-ecs-execution-role"
+}
+
 # IAM Role for ECS Task Execution
 resource "aws_iam_role" "ecs_execution_role" {
+  count = data.aws_iam_role.existing_execution_role[0].id == null ? 1 : 0
   name = "book-review-ecs-execution-role"
 
   assume_role_policy = jsonencode({
@@ -208,12 +257,25 @@ resource "aws_iam_role" "ecs_execution_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
-  role       = aws_iam_role.ecs_execution_role.name
+  count      = data.aws_iam_role.existing_execution_role[0].id == null ? 1 : 0
+  role       = aws_iam_role.ecs_execution_role[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# Use existing or new execution role
+locals {
+  execution_role_arn = data.aws_iam_role.existing_execution_role[0].id != null ? data.aws_iam_role.existing_execution_role[0].arn : aws_iam_role.ecs_execution_role[0].arn
+}
+
+# Check if ECS Task Role already exists
+data "aws_iam_role" "existing_task_role" {
+  count = 1
+  name  = "book-review-ecs-task-role"
 }
 
 # IAM Role for ECS Task
 resource "aws_iam_role" "ecs_task_role" {
+  count = data.aws_iam_role.existing_task_role[0].id == null ? 1 : 0
   name = "book-review-ecs-task-role"
 
   assume_role_policy = jsonencode({
@@ -233,6 +295,11 @@ resource "aws_iam_role" "ecs_task_role" {
     Name    = "book-review-ecs-task-role"
     Project = "book-review-platform"
   }
+}
+
+# Use existing or new task role
+locals {
+  task_role_arn = data.aws_iam_role.existing_task_role[0].id != null ? data.aws_iam_role.existing_task_role[0].arn : aws_iam_role.ecs_task_role[0].arn
 }
 
 # ECS Cluster
@@ -257,8 +324,8 @@ resource "aws_ecs_task_definition" "backend" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"  # Minimal CPU
   memory                   = "512"  # Minimal memory
-  execution_role_arn       = aws_iam_role.ecs_execution_role.arn
-  task_role_arn           = aws_iam_role.ecs_task_role.arn
+  execution_role_arn       = local.execution_role_arn
+  task_role_arn           = local.task_role_arn
 
   container_definitions = jsonencode([
     {
@@ -330,7 +397,7 @@ resource "aws_ecs_task_definition" "backend" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/book-review-backend"
+          awslogs-group         = local.backend_log_group_name
           awslogs-region        = "us-east-1"
           awslogs-stream-prefix = "ecs"
         }
@@ -353,8 +420,8 @@ resource "aws_ecs_task_definition" "frontend" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"  # Minimal CPU
   memory                   = "512"  # Minimal memory
-  execution_role_arn       = aws_iam_role.ecs_execution_role.arn
-  task_role_arn           = aws_iam_role.ecs_task_role.arn
+  execution_role_arn       = local.execution_role_arn
+  task_role_arn           = local.task_role_arn
 
   container_definitions = jsonencode([
     {
@@ -371,7 +438,7 @@ resource "aws_ecs_task_definition" "frontend" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/book-review-frontend"
+          awslogs-group         = local.frontend_log_group_name
           awslogs-region        = "us-east-1"
           awslogs-stream-prefix = "ecs"
         }
@@ -424,7 +491,7 @@ resource "aws_ecs_service" "backend" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.backend.arn
+    target_group_arn = local.backend_target_group_arn
     container_name   = "book-review-backend"
     container_port   = 8080
   }
@@ -453,7 +520,7 @@ resource "aws_ecs_service" "frontend" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.frontend.arn
+    target_group_arn = local.frontend_target_group_arn
     container_name   = "book-review-frontend"
     container_port   = 80
   }
@@ -469,15 +536,15 @@ resource "aws_ecs_service" "frontend" {
 # Outputs
 output "alb_dns_name" {
   description = "DNS name of the load balancer"
-  value       = aws_lb.main.dns_name
+  value       = local.load_balancer_id
 }
 
 output "frontend_url" {
   description = "URL for the frontend application"
-  value       = "http://${aws_lb.main.dns_name}"
+  value       = "http://${local.load_balancer_id}"
 }
 
 output "backend_url" {
   description = "URL for the backend API"
-  value       = "http://${aws_lb.main.dns_name}/api"
+  value       = "http://${local.load_balancer_id}/api"
 }
