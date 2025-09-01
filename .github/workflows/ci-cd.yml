@@ -284,7 +284,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+        aws-region: us-east-1
         
     - name: 🏗️ Setup Terraform
       uses: hashicorp/setup-terraform@v3
@@ -293,25 +293,21 @@ jobs:
         
     - name: 🔧 Terraform Init
       run: terraform init
-      working-directory: ./infra/backend
+      working-directory: ./infra/us-east-1-minimal
       
     - name: 📋 Terraform Plan
       run: terraform plan -out=tfplan
-      working-directory: ./infra/backend
-      env:
-        TF_VAR_environment: production
-        TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
-        TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-        
+      working-directory: ./infra/us-east-1-minimal
+      
     - name: 🚀 Terraform Apply
       run: terraform apply -auto-approve tfplan
-      working-directory: ./infra/backend
+      working-directory: ./infra/us-east-1-minimal
       
     - name: 📊 Output Deployment Info
       run: |
         echo "🎉 Deployment completed successfully!"
         echo "Backend URL: $(terraform output -raw backend_url)"
         echo "Frontend URL: $(terraform output -raw frontend_url)"
-      working-directory: ./infra/backend
+      working-directory: ./infra/us-east-1-minimal
 
 # Notification job removed - no Slack webhook configured
