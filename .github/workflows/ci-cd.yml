@@ -226,7 +226,7 @@ jobs:
       run: |
         echo "=== AWS Credentials Debug ==="
         echo "Access Key ID: ${{ secrets.AWS_ACCESS_KEY_ID }}"
-        echo "Secret Key Length: ${{ length(secrets.AWS_SECRET_ACCESS_KEY) }}"
+        echo "Secret Key Length: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' && 'NOT EMPTY' || 'EMPTY' }}"
         echo "Secret Key Starts with 'maR00AnlJ4': ${{ startsWith(secrets.AWS_SECRET_ACCESS_KEY, 'maR00AnlJ4') && '✅ YES' || '❌ NO' }}"
         echo "Secret Key Ends with 'bF': ${{ endsWith(secrets.AWS_SECRET_ACCESS_KEY, 'bF') && '✅ YES' || '❌ NO' }}"
         echo "Region: ${{ secrets.AWS_REGION }}"
