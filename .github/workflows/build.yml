@@ -27,7 +27,7 @@ jobs:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+        key: ${{ runner.os }}-gradle-${{ hashFiles('backend/**/*.gradle*') }}
         restore-keys: ${{ runner.os }}-gradle
         
     - name: 🔍 Debug - Check gradlew exists
@@ -36,19 +36,21 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Current directory contents:"
         ls -la
-        echo "Gradle wrapper files:"
-        ls -la gradle/wrapper/ || echo "gradle/wrapper not found"
-        ls -la gradlew || echo "gradlew not found"
+        echo "Backend directory contents:"
+        ls -la backend/ || echo "backend directory not found"
+        echo "Gradle wrapper files in backend:"
+        ls -la backend/gradle/wrapper/ || echo "backend/gradle/wrapper not found"
+        ls -la backend/gradlew || echo "backend/gradlew not found"
         
     - name: 🔧 Grant execute permission for gradlew
-      run: chmod +x gradlew
+      run: chmod +x backend/gradlew
       
     - name: 🧪 Run tests
-      run: ./gradlew test
+      run: cd backend && ./gradlew test
       if: false  # Temporarily disabled to speed up pipeline
       
     - name: 🏗️ Build with Gradle
-      run: ./gradlew build -x test
+      run: cd backend && ./gradlew build -x test
       env:
         GRADLE_OPTS: "-Dorg.gradle.daemon=false"
       

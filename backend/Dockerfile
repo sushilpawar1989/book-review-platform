@@ -57,9 +57,8 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-
 # JVM optimization for containers
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
-CMD ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+
+# Run the application with Flyway configuration
+CMD ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar --spring.profiles.active=dev --spring.datasource.url=jdbc:h2:mem:testdb --spring.jpa.hibernate.ddl-auto=none --spring.sql.init.mode=never --spring.jpa.defer-datasource-initialization=false --spring.flyway.enabled=true --spring.flyway.baseline-on-migrate=true --spring.flyway.baseline-version=0 --spring.flyway.locations=classpath:db/migration"]
